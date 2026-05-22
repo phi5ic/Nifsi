@@ -1,6 +1,7 @@
+<div align="center">
+  
 # Nifsi: A Distributed Userspace Operating System Layer
 
-<div align="center">
   
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/yourusername/nifsi/blob/main/LICENSE)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)
