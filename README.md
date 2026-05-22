@@ -1,9 +1,9 @@
 # Nifsi: A Distributed Userspace Operating System Layer
-
+<div align="center">
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/yourusername/nifsi/blob/main/LICENSE)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)
 ![Status: Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-
+</div>
 Nifsi is a distributed userspace operating system layer that runs on top of Linux. This project tries to overthrow the overcomplexity of modern orchestration by tossing out YAML manifests, the containers, and the heavy orchestration layers.
 
 Instead, you just install a lightweight daemon and join a mesh. Instantly your machines unify into one system with a single filesystem, a shared process space and transparent resource scheduling.
