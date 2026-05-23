@@ -48,7 +48,7 @@ The project pulls heavy inspiration from Plan 9's philsophy as quoted above, but
 
 - **Networking**: fast, minimal-attack-surface tunnels powered by *WireGuard*.
 
-# What Stage The Project is at Now ?
+# What Stage is The Project at Now ?
 
 Im trying to make the v1 possible, v1 is built for small, low latency LAN clusters of roughly 5 to 50 nodes. It is perfect for home labs, small offices and research enviroments where you just wnat to share compute and data across a few machines without managing infrastructure stack.
 
