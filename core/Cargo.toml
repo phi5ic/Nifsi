@@ -1,0 +1,15 @@
+[package]
+name = 'nifsi-core'
+version = '0.1.0'
+edition = '2021'
+
+[dependencies]
+serde={version='1.0', features=['derive']}
+tokio={version='1.0', features=['full']}
+tokio-util={version='0.7', features=['codec']}
+bytes='1.5'
+thiserror='1.0'
+
+[lib]
+path='src/core_lib.rs'
+

@@ -1,0 +1,11 @@
+[workspace]
+members = [
+
+'cli',
+'core',
+'daemon',
+'fs',
+'mesh',
+
+]
+resolver = '2'

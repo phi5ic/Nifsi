@@ -1,0 +1,16 @@
+[package]
+name='nifsid'
+version='0.1.0'
+edition='2021'
+
+[dependencies]
+nifsi-core={path='../core'}
+mesh={path='../mesh'}
+fs={path='../fs'}
+tokio={version='1.0', features=['full']}
+tracing='0.1'
+tracing-subscriber='0.3'
+
+[[bin]]
+name='nifsid'
+path='src/nifsid_main.rs'
