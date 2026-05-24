@@ -24,9 +24,9 @@ Because of this, I will try to keep the development steady but it will be subjec
 
 ## How It Works
 
-> The Network Is The Computer.
+> Everything is a file, everywhere.
 
-The project pulls heavy inspiration from Plan 9's philsophy as quoted above, but trying to fix the slow networks and lack of POSIX compatibility that held it back.
+The project pulls heavy inspiration from Plan 9's philosophy as quoted above, but trying to fix the slow networks and lack of POSIX compatibility that held it back.
 
 - **The Filesystem is the Interface**: Nifsi mounts a distributed FUSE filesystem at `/nifsi/` on every node. There is no web dashboard or custom GUI. Much more simple that way. Health can be checked by running `cat /nifsi/cluster/health`. Standard Unix tools like `ls`, `grep`, and `watch` work normally just like any other Linux machines.
 
@@ -50,7 +50,23 @@ The project pulls heavy inspiration from Plan 9's philsophy as quoted above, but
 
 # What Stage is The Project at Now ?
 
-Im trying to make the v1 possible, v1 is built for small, low latency LAN clusters of roughly 5 to 50 nodes. It is perfect for home labs, small offices and research enviroments where you just wnat to share compute and data across a few machines without managing infrastructure stack.
+Im trying to make the v1 possible, v1 is built for small, low latency LAN clusters of roughly 5 to 50 nodes. It is perfect for home labs, small offices and research environments where you just want to share compute and data across a few machines without managing infrastructure stack.
+
+***UPDATE**: The skeletal system is complete and compiles clean.
+
+**Workspace**: five crates wired together as a Cargo workspace:
+
+- `core`: shared wire protocol and config
+- `mesh`: WireGuard mesh layer, node discovery, heartbeats
+- `fs`: Fuse filesystem implementation
+- `daemon`: `nifsid`, the main daemon binary
+- `cli`: `nifsi`, the user facing cli
+
+**Wire protocol**: a custom binary protocol for all node to node communication. 13 byte fixed header (type, size, request ID) followed by a variable-length payload. 15 message types covering filesystem operations, process management, Raft consensus, chunk transfers, and node join/leave.
+
+**CLI**: `nifsi join`, `nifsi leave`, `nifsi status`, `nifsi evict` are all stubbed and parse correctly.
+
+Nothing beyond the scaffold works yet. The mesh doesnt connect, the filesystem doesnt mount, consensus doesnt run, but the foundation is there and it builds.
 
 # License
 Nifsi is released under the **AGPL v3**. It is strictly open-source. You can use it for anything, but if you modify the code and allow users to interact with it over a network, you are legally required to publish your modified source code back to the community.
