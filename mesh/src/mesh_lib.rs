@@ -2,6 +2,7 @@ pub mod protocol;
 pub mod swarm;
 pub mod transport;
 
+pub use protocol::{get_cluster_key, set_cluster_key};
 pub use swarm::{NodeHealthGossip, SwarmConfig, SwarmRouter};
 pub use transport::{FsMutationHandler, TcpMeshNetwork};
 

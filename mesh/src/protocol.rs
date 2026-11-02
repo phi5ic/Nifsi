@@ -11,15 +11,64 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use thiserror::Error;
 use tokio_util::codec::{Decoder, Encoder};
 
-/// Hardware Cluster Master Key (256-bit / 32 bytes)
-/// Cryptographically aligned with the Renesas RA4M1 Arduino Uno R4 HSM Flash
-/// MADE WITH AI
-pub const HARDWARE_CLUSTER_KEY: [u8; 32] = [
-    0x7f, 0x8e, 0x9a, 0x2b, 0x4c, 0x10, 0xd3, 0xe4,
-    0xf5, 0x06, 0x17, 0x28, 0x39, 0x4a, 0x5b, 0x6c,
-    0x81, 0x92, 0xa3, 0xb4, 0xc5, 0xd6, 0xe7, 0xf8,
-    0x09, 0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x70,
-];
+static CLUSTER_KEY: OnceLock<[u8; 32]> = OnceLock::new();
+
+pub fn set_cluster_key(key: [u8; 32]) {
+    let _ = CLUSTER_KEY.set(key);
+}
+
+pub fn get_cluster_key() -> &'static [u8; 32] {
+    CLUSTER_KEY.get_or_init(|| {
+        if let Ok(key_hex) = std::env::var("NIFSI_CLUSTER_KEY") {
+            let s = key_hex.trim();
+            if s.len() == 64 {
+                if let Ok(bytes) = (0..32)
+                    .map(|i| u8::from_str_radix(&s[i * 2..i * 2 + 2], 16))
+                    .collect::<Result<Vec<u8>, _>>()
+                {
+                    let mut k = [0u8; 32];
+                    k.copy_from_slice(&bytes);
+                    return k;
+                }
+            }
+        }
+        for path in &["/var/lib/nifsi/cluster.key", "/etc/nifsi/cluster.key", "/tmp/nifsi_cluster.key"] {
+            if let Ok(data) = std::fs::read(path) {
+                if data.len() >= 32 {
+                    let mut k = [0u8; 32];
+                    k.copy_from_slice(&data[..32]);
+                    return k;
+                }
+            }
+        }
+        let mut k = [0u8; 32];
+        if let Ok(mut f) = std::fs::File::open("/dev/urandom") {
+            use std::io::Read;
+            let _ = f.read_exact(&mut k);
+        } else {
+            let seed = std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos();
+            k[..16].copy_from_slice(&seed.to_le_bytes());
+        }
+        for path in &["/var/lib/nifsi/cluster.key", "/tmp/nifsi_cluster.key"] {
+            let p = std::path::Path::new(path);
+            if let Some(parent) = p.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            if std::fs::write(path, &k).is_ok() {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let _ = std::fs::set_permissions(p, std::fs::Permissions::from_mode(0o600));
+                }
+                break;
+            }
+        }
+        k
+    })
+}
 
 pub const FRAME_MAGIC: &[u8; 4] = b"NIFS";
 pub const MAGIC_LEN: usize = 4;
@@ -194,7 +243,7 @@ impl Message {
         plaintext.extend_from_slice(&self.payload);
 
         let nonce_bytes = generate_nonce();
-        let cipher = ChaCha20Poly1305::new(Key::from_slice(&HARDWARE_CLUSTER_KEY));
+        let cipher = ChaCha20Poly1305::new(Key::from_slice(get_cluster_key()));
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher
@@ -236,7 +285,7 @@ impl Message {
         let mut ciphertext = vec![0u8; ciphertext_len];
         src.copy_to_slice(&mut ciphertext);
 
-        let cipher = ChaCha20Poly1305::new(Key::from_slice(&HARDWARE_CLUSTER_KEY));
+        let cipher = ChaCha20Poly1305::new(Key::from_slice(get_cluster_key()));
         let nonce = Nonce::from_slice(&nonce_bytes);
         let plaintext = cipher
             .decrypt(nonce, ciphertext.as_ref())

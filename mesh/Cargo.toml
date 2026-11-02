@@ -9,7 +9,6 @@ nifsi-raft  = { path = "../raft" }
 tokio = { version = "1.0", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 serde = { version = "1.0", features = ["derive"] }
-boringtun = "0.6"
 chacha20poly1305 = "0.10"
 bytes = "1.5"
 bincode = "1.3"

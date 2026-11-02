@@ -30,7 +30,7 @@ The project pulls heavy inspiration from Plan 9's philosophy as quoted above, bu
 
 - **The Filesystem is the Interface**: Nifsi mounts a distributed FUSE filesystem at `/nifsi/` on every node. There is no web dashboard or custom GUI. Much more simple that way. Health can be checked by running `cat /nifsi/cluster/health`. Standard Unix tools like `ls`, `grep`, and `watch` work normally just like any other Linux machines.
 
-- **Encrypted Mesh**: All nodes connect via a peer-to-peer WireGuard mesh. The network is fully encrypted by default with zero trust. No exceptions, not even on a local LAN.
+- **Encrypted Mesh**: All nodes connect via a peer-to-peer ChaCha20-Poly1305 AEAD encrypted mesh. The network is fully encrypted by default with zero trust. No exceptions, not even on a local LAN.
 
 - **Compute Follows Data**: When you spawn a process, the scheduler figures out where the required data lives and runs the compute there.
 
@@ -46,7 +46,7 @@ The project pulls heavy inspiration from Plan 9's philosophy as quoted above, bu
 
 - **Tracing**: using *eBPF* for safe, userspace kernel instrumentation.
 
-- **Networking**: fast, minimal-attack-surface tunnels powered by *WireGuard*.
+- **Networking**: zero-trust, authenticated AEAD peer-to-peer framing powered by *ChaCha20-Poly1305* and Boids swarm routing.
 
 # What Stage is The Project at Now ?
 
@@ -57,7 +57,8 @@ Im trying to make the v1 possible, v1 is built for small, low latency LAN cluste
 **Workspace**: five crates wired together as a Cargo workspace:
 
 - `core`: shared wire protocol and config
-- `mesh`: WireGuard mesh layer, node discovery, heartbeats
+- `mesh`: ChaCha20-Poly1305 AEAD encrypted mesh layer, Boids swarm discovery, heartbeats
+- `raft`: SQLite-backed Raft distributed consensus node and log store
 - `fs`: Fuse filesystem implementation
 - `daemon`: `nifsid`, the main daemon binary
 - `cli`: `nifsi`, the user facing cli

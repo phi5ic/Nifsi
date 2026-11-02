@@ -13,6 +13,7 @@ use nifsi_fs::hadr::{
     GuideRNA, SliceGuideRNA, StrandDetector, StrandEncoder,
 };
 use std::fs;
+use std::io::Read;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -105,42 +106,55 @@ fn resolve_token(arg_token: Option<String>) -> String {
         }
     }
 
-    // Generate secure 64-bit random hexadecimal seed
-    let seed = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    let token = format!("nifsi-sec-{:016x}", seed);
+    let mut rand_bytes = [0u8; 32];
+    if let Ok(mut f) = fs::File::open("/dev/urandom") {
+        let _ = f.read_exact(&mut rand_bytes);
+    } else {
+        let nanos = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let pid = std::process::id() as u128;
+        rand_bytes[..16].copy_from_slice(&(nanos ^ 0x5a5a5a5a).to_le_bytes());
+        rand_bytes[16..].copy_from_slice(&(pid ^ nanos).to_le_bytes());
+    }
+    let token = format!(
+        "nifsi-sec-{}",
+        rand_bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>()
+    );
     for p in &token_paths {
         if let Some(parent) = p.parent() {
             let _ = fs::create_dir_all(parent);
         }
         if fs::write(p, &token).is_ok() {
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = fs::set_permissions(p, fs::Permissions::from_mode(0o600));
+            }
             break;
         }
     }
     token
 }
 
-/// Verifies whether the request carries a valid Bearer token in the header or query param.
-fn check_auth(req_str: &str, raw_path: &str, valid_token: &str) -> bool {
-    // 1. Query parameter ?token=...
-    if let Some(query_start) = raw_path.find('?') {
-        let query = &raw_path[query_start + 1..];
-        for pair in query.split('&') {
-            if let Some((k, v)) = pair.split_once('=') {
-                if k == "token" && v == valid_token {
-                    return true;
-                }
-            }
-        }
+fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
     }
-    // 2. Authorization: Bearer <TOKEN> header
+    let mut diff = 0u8;
+    for (x, y) in a.iter().zip(b.iter()) {
+        diff |= x ^ y;
+    }
+    diff == 0
+}
+
+fn check_auth(req_str: &str, valid_token: &str) -> bool {
     for line in req_str.lines() {
         if line.to_ascii_lowercase().starts_with("authorization:") {
             let val = line[14..].trim();
             if let Some(bearer) = val.strip_prefix("Bearer ") {
-                if bearer.trim() == valid_token {
+                if constant_time_eq(bearer.trim().as_bytes(), valid_token.as_bytes()) {
                     return true;
                 }
             }
@@ -704,7 +718,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             // Security Gate: Enforce Token Authentication on all /api/* routes
-            if path.starts_with("/api/") && !check_auth(&req_str, raw_path, &valid_token) {
+            if path.starts_with("/api/") && !check_auth(&req_str, &valid_token) {
                 let resp_body = r#"{"error":"Unauthorized: Valid Nifsi Cluster Access Token required"}"#;
                 let resp = format!(
                     "HTTP/1.1 401 UNAUTHORIZED\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
