@@ -1,13 +1,24 @@
 [package]
-name='fs'
-version='0.1.0'
-edition='2021'
+name = "nifsi-fs"
+version = "0.1.0"
+edition = "2024"
 
 [dependencies]
-nifsi-core={path='../core'}
-fuser='0.14'
-libc='0.2'
-tokio={version='1.0', features=['full']}
+nifsi-core = { path = "../core" }
+fuser = { version = "0.14", default-features = false }
+libc = "0.2"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
+thiserror = "1.0"
+ring = "0.17"
 
 [lib]
-path='src/fs_lib.rs'
+path = "src/fs_lib.rs"
+
+[[bench]]
+name = "hadr_bench"
+harness = false
+
+
+

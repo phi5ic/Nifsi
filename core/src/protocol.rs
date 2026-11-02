@@ -1,200 +1,209 @@
-use bytes::{Buf, BufMut, BytesMut};
-use std::convert::TryFrom;
-use thiserror::Error;
-use tokio_util::codec::{Decoder, Encoder};
 
+use serde::{Deserialize, Serialize};
 
-pub mod config {
+pub const DEFAULT_SOCKET_PATH: &str = "/tmp/nifsid.sock";
+pub const DEFAULT_SLICE_SIZE: usize = 4096;
+pub const SLICE_SIZE: usize = 4096; 
+pub const DEFAULT_CHUNK_SIZE: usize = 64 * 1024; 
+pub const DEFAULT_COHORT_SIZE: usize = 4;
 
+// Cryptographic and protocol type aliases
+pub type ChunkId = [u8; 32];
+pub type SliceId = [u8; 32];
+pub type HomologyArm = [u8; 32];
+pub type FileId = [u8; 16];
+pub type CohortId = [u8; 16];
+
+// Sub-Packet Sliced Wire Types
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SliceParityKind {
+    Data,
+    HorizontalParity,
+    DiagonalParity,
 }
 
-#[derive(Debug, Error)]
-pub enum ProtocolError {
-    #[error("Invalid message type: {0}")]
-    InvalidMessageType(u8),
-    #[error("Incomplete message header")]
-    IncompleteHeader,
-    #[error("Incomplete payload")]
-    IncompletePayload,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BiologicalSliceWire {
+    pub slice_id: SliceId,
+    pub chunk_id: ChunkId,
+    pub file_id: FileId,
+    pub chunk_sequence_idx: u32,
+    pub slice_idx: u16,
+    pub total_slices: u16,
+    pub kind: SliceParityKind,
+    pub left_arm: Option<HomologyArm>,
+    pub right_arm: Option<HomologyArm>,
+    pub cohort_id: CohortId,
+    pub data: Vec<u8>,
 }
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MessageType {
-    Heartbeat = 0x01,
-    FsRead = 0x02,
-    FsWrite = 0x03,
-    FsList = 0x04,
-    FsMetadata = 0x05,
-    ProcSpawn = 0x06,
-    ProcSignal = 0x07,
-    ProcStream = 0x08,
-    RaftVote = 0x09,
-    RaftAppend = 0x0A,
-    RaftResponse = 0x0B,
-    ChunkTransfer = 0x0C,
-    ChunkRequest = 0x0D,
-    NodeJoin = 0x0E,
-    NodeLeave = 0x0F,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SliceAnnouncement {
+    pub node_id: String,
+    pub file_id: FileId,
+    pub chunk_id: ChunkId,
+    pub chunk_sequence_idx: u32,
+    pub slice_idx: u16,
+    pub slice_id: SliceId,
+    pub cohort_id: CohortId,
+    pub kind: SliceParityKind,
+    pub left_arm: Option<HomologyArm>,
+    pub right_arm: Option<HomologyArm>,
 }
 
-impl TryFrom<u8> for MessageType {
-    type Error = ProtocolError;
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ChunkAnnouncement {
+    pub node_id: String,
+    pub chunk_id: ChunkId,
+    pub file_id: FileId,
+    pub sequence_idx: u32,
+    pub left_arm: Option<HomologyArm>,
+    pub right_arm: Option<HomologyArm>,
+    pub cohort_id: CohortId,
+    pub available_slices: Vec<u16>,
+}
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0x01 => Ok(MessageType::Heartbeat),
-            0x02 => Ok(MessageType::FsRead),
-            0x03 => Ok(MessageType::FsWrite),
-            0x04 => Ok(MessageType::FsList),
-            0x05 => Ok(MessageType::FsMetadata),
-            0x06 => Ok(MessageType::ProcSpawn),
-            0x07 => Ok(MessageType::ProcSignal),
-            0x08 => Ok(MessageType::ProcStream),
-            0x09 => Ok(MessageType::RaftVote),
-            0x0A => Ok(MessageType::RaftAppend),
-            0x0B => Ok(MessageType::RaftResponse),
-            0x0C => Ok(MessageType::ChunkTransfer),
-            0x0D => Ok(MessageType::ChunkRequest),
-            0x0E => Ok(MessageType::NodeJoin),
-            0x0f => Ok(MessageType::NodeLeave),
-            _ => Err(ProtocolError::InvalidMessageType(value)), 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SliceTransferRequest {
+    pub file_id: FileId,
+    pub chunk_id: ChunkId,
+    pub chunk_sequence_idx: u32,
+    pub slice_idx: u16,
+    pub kind: SliceParityKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SliceTransferResponse {
+    pub file_id: FileId,
+    pub chunk_id: ChunkId,
+    pub chunk_sequence_idx: u32,
+    pub slice_idx: u16,
+    pub kind: SliceParityKind,
+    pub slice: Option<BiologicalSliceWire>,
+    pub error: Option<String>,
+}
+
+// Partial Write Journaling & Delta Types
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SliceDelta {
+    pub file_id: FileId,
+    pub cohort_id: CohortId,
+    pub sequence_idx: u32,
+    pub slice_idx: u16,
+    pub cohort_idx: u16,
+    pub offset_in_slice: u16,
+    pub delta_bytes: Vec<u8>,
+    pub new_slice_hash: SliceId,
+}
+
+/// Distributed filesystem mutation event replicated across cluster peers.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum FsMutation {
+    WriteSlice {
+        version: u64,
+        file_id: FileId,
+        chunk_sequence_idx: u32,
+        slice_idx: u16,
+        slice: BiologicalSliceWire,
+    },
+    SliceDeltaJournal {
+        version: u64,
+        delta: SliceDelta,
+    },
+    WriteFile {
+        version: u64,
+        name: String,
+        data: Vec<u8>,
+    },
+    DeleteFile {
+        version: u64,
+        name: String,
+    },
+}
+
+impl FsMutation {
+    pub fn version(&self) -> u64 {
+        match self {
+            FsMutation::WriteSlice { version, .. } => *version,
+            FsMutation::SliceDeltaJournal { version, .. } => *version,
+            FsMutation::WriteFile { version, .. } => *version,
+            FsMutation::DeleteFile { version, .. } => *version,
+        }
+    }
+
+    pub fn file_name(&self) -> Option<&str> {
+        match self {
+            FsMutation::WriteFile { name, .. } => Some(name.as_str()),
+            FsMutation::DeleteFile { name, .. } => Some(name.as_str()),
+            _ => None,
         }
     }
 }
 
-pub const HEADER_SIZE: usize = 13;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MessageHeader {
-    pub msg_type: MessageType,
-    pub size: u32,
-    pub req_id: u64,
+// Local IPC Protocol (Daemon <-> CLI / Web)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum IpcRequest {
+    Status,
+    InspectFile { name: String },
+    ListSlices { file: String, chunk_idx: u32 },
+    RepairSlice { file: String, chunk_idx: u32, slice_idx: u16 },
+    Join { address: String },
+    Leave,
+    Evict { node: String },
+    Mount { mountpoint: String },
+    ListStrands,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Message {
-    pub header: MessageHeader,
-    pub payload: Vec<u8>,
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClusterNodeInfo {
+    pub id: String,
+    pub address: String,
+    pub is_leader: bool,
+    pub rtt_ms: f64,
+    pub disk_usage: f64,
 }
 
-impl Message {
-    pub fn new(msg_type: MessageType, req_id: u64, payload: Vec<u8>) -> Self {
-        Self {
-            header: MessageHeader {
-                msg_type,
-                size: payload.len() as u32,
-                req_id,
-            },
-            payload,
-        }
-    }
-
-    pub fn encode(&self, dst: &mut BytesMut) {
-        dst.reserve(HEADER_SIZE + self.payload.len());
-        dst.put_u8(self.header.msg_type as u8);
-        dst.put_u32(self.header.size);
-        dst.put_u64(self.header.req_id);
-        dst.put_slice(&self.payload);
-    }
-
-    pub fn decode(src: &mut BytesMut) -> Result<Option<Self>, ProtocolError> {
-        if src.len() <HEADER_SIZE {
-            return Ok(None);
-        }
-
-        let msg_type_byte=src[0];
-        let msg_type=MessageType::try_from(msg_type_byte)?;
-
-        //peek size (bytes 1..5)
-        let mut size_bytes = [0u8; 4];
-        size_bytes.copy_from_slice(&src[1..5]);
-        let size = u32::from_be_bytes(size_bytes);
-
-        if src.len() < HEADER_SIZE + size as usize {
-            return Ok(None);
-        }
-
-        src.advance(1);
-        let _size = src.get_u32();
-        let req_id = src.get_u64();
-
-        let mut payload = vec![0u8; size as usize];
-        if size > 0 {
-            src.copy_to_slice(&mut payload);
-        }
-
-        Ok(Some(Message {
-            header: MessageHeader {
-                msg_type,
-                size,
-                req_id,
-            },
-            payload,
-        }))
-    }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ClusterStatusResponse {
+    pub node_id: String,
+    pub term: u64,
+    pub role: String,
+    pub leader_id: Option<String>,
+    pub peers: Vec<ClusterNodeInfo>,
+    pub active_chunks: usize,
+    pub detected_breaks: usize,
+    pub repaired_chunks: usize,
+    pub mountpoint: Option<String>,
 }
 
-pub struct NifsiCodec;
-
-impl Decoder for NifsiCodec {
-    type Item = Message;
-    type Error = std::io::Error;
-
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        Message::decode(src).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SliceInfo {
+    pub slice_idx: u16,
+    pub slice_id: String,
+    pub kind: SliceParityKind,
+    pub size: usize,
+    pub left_arm: Option<String>,
+    pub right_arm: Option<String>,
 }
 
-impl Encoder<Message> for NifsiCodec {
-    type Error = std::io::Error;
-
-    fn encode(&mut self, item: Message, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        item.encode(dst);
-        Ok(())
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FileInspectionResponse {
+    pub file_name: String,
+    pub file_id: String,
+    pub file_size: usize,
+    pub total_chunks: u32,
+    pub total_slices: usize,
+    pub cohorts: usize,
+    pub healthy_slices: usize,
+    pub degraded_slices: usize,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_encode_decode() {
-        let payload = vec![0xDE, 0xAD, 0xBE, 0xEF];
-        let msg = Message::new(MessageType::FsRead, 999, payload);
-
-        let mut buf = BytesMut::new();
-        msg.encode(&mut buf);
-
-        buf.truncate(buf.len() - 1);
-
-        let decoded = Message::decode(&mut buf).unwrap();
-        assert!(decoded.is_none());
-    }
-
-    #[test]
-    fn test_invalid_type() {
-        let mut buf = BytesMut::new();
-        buf.put_u8(0xFF);
-        buf.put_u32(0);
-        buf.put_u64(0);
-
-        let result = Message::decode(&mut buf);
-        assert!(matches!(result, Err(ProtocolError::InvalidMessageType(0xFF))));
-    }
-
-    #[test]
-    fn test_full_roundtrip() {
-        let payload = vec![0xDE, 0xAD, OxBE, OxEF];
-        let msg = Message::new(MessageType::FsRead, 99, payload.clone());
-
-        let mut buf = BytesMut::new();
-        msg.encode(&mut buf);
-
-        let decoded = Message::decode(&mut buf).unwrap().unwrap();
-        assert_eq!(decoded.header.msg_type, MessageType::FsRead);
-        assert_eq!(decoded.header.req_id, 999);
-        assert_eq!(decoded.payload, payload);
-    }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum IpcResponse {
+    Status(ClusterStatusResponse),
+    FileInspection(FileInspectionResponse),
+    SliceList(Vec<SliceInfo>),
+    Success(String),
+    Error(String),
 }

@@ -6,6 +6,7 @@ members = [
 'daemon',
 'fs',
 'mesh',
+'raft',
 
 ]
 resolver = '2'
