@@ -1,0 +1,437 @@
+{
+  "timestamp": "2026-11-02 20:58:56 UTC",
+  "microbenchmarks": [
+    {
+      "engine": "Monolithic XOR (HADR-v1)",
+      "chunk_size_kb": 64,
+      "encode_throughput_gb_s": 14.9586,
+      "repair_throughput_gb_s": 17.6036,
+      "repair_network_transfer_kb": 256.0,
+      "degraded_read_latency_ms": 0.013869,
+      "latency_p50_us": 13.37,
+      "latency_p95_us": 16.27,
+      "latency_p99_us": 16.27,
+      "write_amplification_factor": 64.0,
+      "partial_write_io_kb": 256.0
+    },
+    {
+      "engine": "Sliced HADR-v2 (Ph + Pd)",
+      "chunk_size_kb": 64,
+      "encode_throughput_gb_s": 0.818,
+      "repair_throughput_gb_s": 3.7185,
+      "repair_network_transfer_kb": 16.0,
+      "degraded_read_latency_ms": 0.004103,
+      "latency_p50_us": 4.08,
+      "latency_p95_us": 4.25,
+      "latency_p99_us": 4.39,
+      "write_amplification_factor": 3.0,
+      "partial_write_io_kb": 12.0
+    },
+    {
+      "engine": "Reed-Solomon GF(2^8) (k=4, p=2)",
+      "chunk_size_kb": 64,
+      "encode_throughput_gb_s": 0.7108,
+      "repair_throughput_gb_s": 1.712,
+      "repair_network_transfer_kb": 256.0,
+      "degraded_read_latency_ms": 0.142607,
+      "latency_p50_us": 142.79,
+      "latency_p95_us": 150.48,
+      "latency_p99_us": 150.48,
+      "write_amplification_factor": 96.0,
+      "partial_write_io_kb": 384.0
+    },
+    {
+      "engine": "Monolithic XOR (HADR-v1)",
+      "chunk_size_kb": 256,
+      "encode_throughput_gb_s": 37.1829,
+      "repair_throughput_gb_s": 35.7717,
+      "repair_network_transfer_kb": 1024.0,
+      "degraded_read_latency_ms": 0.0273,
+      "latency_p50_us": 24.71,
+      "latency_p95_us": 37.48,
+      "latency_p99_us": 37.48,
+      "write_amplification_factor": 256.0,
+      "partial_write_io_kb": 1024.0
+    },
+    {
+      "engine": "Sliced HADR-v2 (Ph + Pd)",
+      "chunk_size_kb": 256,
+      "encode_throughput_gb_s": 0.9521,
+      "repair_throughput_gb_s": 3.0983,
+      "repair_network_transfer_kb": 16.0,
+      "degraded_read_latency_ms": 0.004925,
+      "latency_p50_us": 4.08,
+      "latency_p95_us": 5.12,
+      "latency_p99_us": 9.77,
+      "write_amplification_factor": 3.0,
+      "partial_write_io_kb": 12.0
+    },
+    {
+      "engine": "Reed-Solomon GF(2^8) (k=4, p=2)",
+      "chunk_size_kb": 256,
+      "encode_throughput_gb_s": 0.6291,
+      "repair_throughput_gb_s": 1.6056,
+      "repair_network_transfer_kb": 1024.0,
+      "degraded_read_latency_ms": 0.608222,
+      "latency_p50_us": 614.63,
+      "latency_p95_us": 639.22,
+      "latency_p99_us": 639.22,
+      "write_amplification_factor": 384.0,
+      "partial_write_io_kb": 1536.0
+    },
+    {
+      "engine": "Monolithic XOR (HADR-v1)",
+      "chunk_size_kb": 1024,
+      "encode_throughput_gb_s": 25.44,
+      "repair_throughput_gb_s": 27.8319,
+      "repair_network_transfer_kb": 4096.0,
+      "degraded_read_latency_ms": 0.140351,
+      "latency_p50_us": 148.47,
+      "latency_p95_us": 162.83,
+      "latency_p99_us": 162.83,
+      "write_amplification_factor": 1024.0,
+      "partial_write_io_kb": 4096.0
+    },
+    {
+      "engine": "Sliced HADR-v2 (Ph + Pd)",
+      "chunk_size_kb": 1024,
+      "encode_throughput_gb_s": 0.7249,
+      "repair_throughput_gb_s": 2.3573,
+      "repair_network_transfer_kb": 16.0,
+      "degraded_read_latency_ms": 0.006473,
+      "latency_p50_us": 5.97,
+      "latency_p95_us": 8.01,
+      "latency_p99_us": 11.13,
+      "write_amplification_factor": 3.0,
+      "partial_write_io_kb": 12.0
+    },
+    {
+      "engine": "Reed-Solomon GF(2^8) (k=4, p=2)",
+      "chunk_size_kb": 1024,
+      "encode_throughput_gb_s": 0.4105,
+      "repair_throughput_gb_s": 1.5925,
+      "repair_network_transfer_kb": 4096.0,
+      "degraded_read_latency_ms": 2.452887,
+      "latency_p50_us": 2465.09,
+      "latency_p95_us": 2537.26,
+      "latency_p99_us": 2537.26,
+      "write_amplification_factor": 1536.0,
+      "partial_write_io_kb": 6144.0
+    },
+    {
+      "engine": "Monolithic XOR (HADR-v1)",
+      "chunk_size_kb": 4096,
+      "encode_throughput_gb_s": 14.0648,
+      "repair_throughput_gb_s": 15.053,
+      "repair_network_transfer_kb": 16384.0,
+      "degraded_read_latency_ms": 1.038002,
+      "latency_p50_us": 995.55,
+      "latency_p95_us": 1357.14,
+      "latency_p99_us": 1357.14,
+      "write_amplification_factor": 4096.0,
+      "partial_write_io_kb": 16384.0
+    },
+    {
+      "engine": "Sliced HADR-v2 (Ph + Pd)",
+      "chunk_size_kb": 4096,
+      "encode_throughput_gb_s": 0.8049,
+      "repair_throughput_gb_s": 1.313,
+      "repair_network_transfer_kb": 16.0,
+      "degraded_read_latency_ms": 0.011621,
+      "latency_p50_us": 11.55,
+      "latency_p95_us": 11.59,
+      "latency_p99_us": 15.71,
+      "write_amplification_factor": 3.0,
+      "partial_write_io_kb": 12.0
+    },
+    {
+      "engine": "Reed-Solomon GF(2^8) (k=4, p=2)",
+      "chunk_size_kb": 4096,
+      "encode_throughput_gb_s": 0.4187,
+      "repair_throughput_gb_s": 1.513,
+      "repair_network_transfer_kb": 16384.0,
+      "degraded_read_latency_ms": 10.326891,
+      "latency_p50_us": 10335.04,
+      "latency_p95_us": 10468.15,
+      "latency_p99_us": 10468.15,
+      "write_amplification_factor": 6144.0,
+      "partial_write_io_kb": 24576.0
+    },
+    {
+      "engine": "Monolithic XOR (HADR-v1)",
+      "chunk_size_kb": 16384,
+      "encode_throughput_gb_s": 12.8932,
+      "repair_throughput_gb_s": 14.253,
+      "repair_network_transfer_kb": 65536.0,
+      "degraded_read_latency_ms": 4.385056,
+      "latency_p50_us": 4393.98,
+      "latency_p95_us": 4570.8,
+      "latency_p99_us": 4570.8,
+      "write_amplification_factor": 16384.0,
+      "partial_write_io_kb": 65536.0
+    },
+    {
+      "engine": "Sliced HADR-v2 (Ph + Pd)",
+      "chunk_size_kb": 16384,
+      "encode_throughput_gb_s": 0.942,
+      "repair_throughput_gb_s": 3.4266,
+      "repair_network_transfer_kb": 16.0,
+      "degraded_read_latency_ms": 0.004453,
+      "latency_p50_us": 4.08,
+      "latency_p95_us": 5.34,
+      "latency_p99_us": 6.35,
+      "write_amplification_factor": 3.0,
+      "partial_write_io_kb": 12.0
+    },
+    {
+      "engine": "Reed-Solomon GF(2^8) (k=4, p=2)",
+      "chunk_size_kb": 16384,
+      "encode_throughput_gb_s": 0.6723,
+      "repair_throughput_gb_s": 1.6283,
+      "repair_network_transfer_kb": 65536.0,
+      "degraded_read_latency_ms": 38.383151,
+      "latency_p50_us": 38438.13,
+      "latency_p95_us": 38651.95,
+      "latency_p99_us": 38651.95,
+      "write_amplification_factor": 24576.0,
+      "partial_write_io_kb": 98304.0
+    }
+  ],
+  "ingestion": {
+    "total_files": 50,
+    "total_mb": 22.10855484008789,
+    "duration_s": 5.2293736934661865,
+    "throughput_mb_s": 4.2277634256108545,
+    "iops": 9.56137444575289,
+    "verified_count": 46,
+    "ground_truth": {
+      "stress_small_06.bin": [
+        5524,
+        "4cdc7c778384f9436a89fca539b92c05a2ade5885aad931ba51fd8450825c520"
+      ],
+      "stress_small_09.bin": [
+        7774,
+        "c40f361de2c9fdc44965a9783f65275c70ee6100178cc0b7816ab04be49ede56"
+      ],
+      "stress_small_01.bin": [
+        1774,
+        "f155fd6ec2878dc02bbb41d5b0e0db3bda08d4c41a8d1ea1eee6bdfbd8cbedea"
+      ],
+      "stress_small_08.bin": [
+        7024,
+        "78e33ebdcb24ab1502a446814649ca194c8a1c006a887d569a84f086064ba8ce"
+      ],
+      "stress_small_00.bin": [
+        1024,
+        "31abbc590fb06d37e703bb02e48f75c17601697d13e6e476961a97c6451b87f6"
+      ],
+      "stress_small_03.bin": [
+        3274,
+        "f77558ddc0884e82ca06346478b9c485a1bc0280a6256baba9dd9a7b2659adbb"
+      ],
+      "stress_small_04.bin": [
+        4024,
+        "6b10e10e7cc4dc45bd71cb427bacaf33a1ded21ccfe06af280bd738b21a8a496"
+      ],
+      "stress_small_02.bin": [
+        2524,
+        "dfade028882621d688c5d72f1779b1dee0bb2ec9df81e3e2aa7f65db4afcd3ef"
+      ],
+      "stress_small_05.bin": [
+        4774,
+        "5b5f0bbd3df626555b3d70aaf10377e7f020cdfd63ac7c640545a1bbdb588be7"
+      ],
+      "stress_small_07.bin": [
+        6274,
+        "25e5f2d82825d8b2cd4e23e9f4f16e570a460522933e7018e293b75e2281115e"
+      ],
+      "stress_small_12.bin": [
+        10024,
+        "321b5e4fdf9950d57200f594d56c15ec46b69ed1e1b05f6b92a252e48e6e0fc4"
+      ],
+      "stress_small_10.bin": [
+        8524,
+        "362fb2134f2a79164b5dc440718f2425c7088696bcad6f17c819208cbde9b0aa"
+      ],
+      "stress_small_11.bin": [
+        9274,
+        "73261cb5db7afce7e29662336076ee15d0e2be97b51322523a6f613f2344608c"
+      ],
+      "stress_small_13.bin": [
+        10774,
+        "9c7c2e1cf39ebc32cb351ce175f085194e6324df24aa787d0f94cb0778566e1b"
+      ],
+      "stress_small_14.bin": [
+        11524,
+        "a2a380ac0474a44c7fdb8a894c139486cd10dc135b33c3ed6bcf69eacfe954c3"
+      ],
+      "stress_small_15.bin": [
+        12274,
+        "37a7e91598c74b1c8a7310c531707aab341eee1508c61cb38129c39b3352fd46"
+      ],
+      "stress_small_18.bin": [
+        14524,
+        "8f828492b8aeb9ca2aabbb4ce60d7528d1b3315b3ce26eb93e8553ff11651525"
+      ],
+      "stress_small_17.bin": [
+        13774,
+        "a26d89af2742e6eb842c61b84768d63c561ea85a906cf5d8de2b85ebfd93f5d3"
+      ],
+      "stress_small_19.bin": [
+        15274,
+        "e7fc76f20386a9e89f937fc29246fb1d9cfc15fec354d16bb6c8210162ccc64a"
+      ],
+      "stress_small_16.bin": [
+        13024,
+        "5c29d1d883e19858ca07b2c6c547318626be85a5c40a84b31debcadaf8f95751"
+      ],
+      "stress_cohort64_05.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_00.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_02.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_04.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_07.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_06.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_01.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_09.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_11.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_14.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_10.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_13.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_03.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_12.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort64_08.dat": [
+        65536,
+        "5641386d91cdd61f3bb3b5078c8b9d3ffbf16528803d15d88a7414f4b95c792e"
+      ],
+      "stress_cohort_multi_02.dat": [
+        425984,
+        "537fec93615e4072cf07205bc338ce2ba839f90c8e2a999e65958abd7a3b069c"
+      ],
+      "stress_cohort_multi_01.dat": [
+        344064,
+        "aac7bc11a48d4dea68af760e83f26110ccb84844f8fce347083f53658591df91"
+      ],
+      "stress_cohort_multi_00.dat": [
+        262144,
+        "47611586df63d609fc13993997c9704c341b781dc27d30e2a4a73fe2c482ed53"
+      ],
+      "stress_cohort_multi_04.dat": [
+        589824,
+        "5b3252168049d738cf302294c9108cf4db1d0951edb2c67fb602e49294463812"
+      ],
+      "stress_cohort_multi_09.dat": [
+        999424,
+        "bfca95b64d25aa59de427c9f990560c93f1fdcef76a37a8b4a203648cad21a4e"
+      ],
+      "stress_cohort_multi_03.dat": [
+        507904,
+        "1b9e29ff73d6679ea8fb8087986b43b88c00cac7217711b8752f1b51d4093643"
+      ],
+      "stress_cohort_multi_05.dat": [
+        671744,
+        "0f67e3d68be122c175d5e0975b7651063c69b66b0ea01cd0e9f589af7b3d2adf"
+      ],
+      "stress_cohort_multi_06.dat": [
+        753664,
+        "b51cb16fa85ea90d02d5e9c17ae4a8dad09cebde31281c5543ad615347728fd8"
+      ],
+      "stress_cohort_multi_07.dat": [
+        835584,
+        "1499a3e1fba07e2cf9fd958b7e7eaa9d16c3c3c039ba272f960c07bdd85493ca"
+      ],
+      "stress_cohort_multi_08.dat": [
+        917504,
+        "847ccad39e1cc03df456587283a886957ace402bee3b08f6f98232a8c182f4f6"
+      ],
+      "stress_stream_00.raw": [
+        2097152,
+        "90aa423e4c88abebfd0cbcfc72e9e3ef79315d9daa45ddd9d301fd0defbd2c3f"
+      ],
+      "stress_stream_01.raw": [
+        2621440,
+        "af0bd42256dc7f678bcf49d53bd6ea594165f54d4b1188ff3bb981e31828efd9"
+      ],
+      "stress_stream_02.raw": [
+        3145728,
+        "62abb60ac57a261255829eb2ff93dba8aa27cc1d44a823d63cc2d8c207321d28"
+      ],
+      "stress_stream_03.raw": [
+        3670016,
+        "bab9348dc9bd58c2662fdec270a9e977e75e7f7ec9548c00795338e6ea345184"
+      ],
+      "stress_stream_04.raw": [
+        4194304,
+        "039c25795d222eadc82133cd1f2ea89af5fe590070c49f1f1a7308c15457fe58"
+      ]
+    }
+  },
+  "delta_journaling": {
+    "mutations_count": 100,
+    "duration_s": 0.015697002410888672,
+    "ops_per_sec": 6370.643093654121,
+    "waf_hadr_v2": 3.0,
+    "waf_monolithic": 64.0,
+    "waf_saving_pct": 95.3125,
+    "sha256": "3db82fb7e27e88f2e746ffbbff28c7993febe75a9f48a582c30b14ad45aed94f"
+  },
+  "crispr_repair": {
+    "target_file": "crispr_proof_file.dat",
+    "target_chunk": 0,
+    "target_slice": 3,
+    "repair_duration_us": 4563.093185424805,
+    "sha256_match": true
+  },
+  "fault_tolerance": {
+    "killed_node": "vnode3",
+    "quorum_write_time_s": 0.009726762771606445,
+    "resurrected_pid": 21583,
+    "resync_success": true
+  },
+  "physical_pi": {
+    "verified_pi": 5,
+    "total_pi_files": 5,
+    "target_ip": "192.168.1.5"
+  }
+}
