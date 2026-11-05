@@ -21,6 +21,8 @@ I am an independent systems engineer building Nifsi alongside full-time universi
 - **Target environment**: Small, low-latency LAN clusters (home labs, edge nodes, drone swarms, research testbeds).
 - **Tested setups**: Tested across 4 virtual local nodes and heterogeneous nodes (e.g., laptop + Raspberry Pi 3B+ ARM Cortex-A53 over Wi-Fi).
 
+**Use of AI & Transparency**: Certain peripheral files (such as the web dashboard interface and benchmark harness scripts) are generated or scaffolded with AI assistance so I can spend my time on the core storage engine, FUSE internals, and consensus protocols rather than boilerplate. Any AI-assisted files are explicitly documented with comments in the files themselves, and all benchmark harnesses are verified against actual code and coding theory.
+
 ---
 
 ## System in Action
@@ -215,6 +217,16 @@ The microbenchmarks, chaos testing scripts, and JSON results comparing Sliced HA
 - Harness: `benchmarks/run_benchmark.sh` and `benchmarks/hadr_bench.rs`
 - Scientific report: `benchmarks/BENCHMARK_SCIENTIFIC_REPORT.md`
 - Raw results: `benchmarks/benchmark_results.json`
+
+---
+
+## Security & Network Safety
+
+Mesh traffic between cluster nodes is encrypted and authenticated by default using **ChaCha20-Poly1305 AEAD**. However, Nifsi is pre-release experimental software and has **not** undergone an independent security audit or formal verification.
+
+- **Do not expose Nifsi ports to untrusted networks or the public internet.** Run only inside trusted LANs, isolated VLANs, or encrypted overlay networks (WireGuard/Tailscale).
+- Byzantine fault tolerance (BFT) is currently out of scope; the cluster assumes benign failure modes (crashes, packet loss, node drops), not malicious Byzantine actors.
+- If you discover a security flaw or vulnerability, please open an issue or reach out directly at [aravindanilraj0702@gmail.com](mailto:aravindanilraj0702@gmail.com).
 
 ---
 
