@@ -1,147 +1,223 @@
-<div align="center">
-  
-# Nifsi: A Distributed Userspace Operating System Layer
+# Nifsi
 
-  
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/phi5ic/nifsi/blob/main/LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/phi5ic/Nifsi/blob/main/LICENSE)
+![Language: Rust](https://img.shields.io/badge/Language-Rust-orange.svg)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)
-![Status: Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
+![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-green.svg)
 
-</div>
+Nifsi is an experimental, distributed userspace operating system layer written in Rust for Linux clusters (targeting 5 to 50 nodes). 
 
-Nifsi is a distributed userspace operating system layer that runs on top of Linux. This project tries to overthrow the overcomplexity of modern orchestration by tossing out YAML manifests, the containers, and the heavy orchestration layers.
+The goal of the project is to provide a single, coherent system view across multiple physical or virtual machines without the operational overhead of heavy container orchestration platforms or complex hypervisors. By installing a lightweight daemon (`nifsid`) on each node, machines form an encrypted peer-to-peer mesh presenting a unified FUSE filesystem, Raft-replicated metadata, and a self-healing erasure-coded storage engine.
 
-Instead, you just install a lightweight daemon and join a mesh. Instantly your machines unify into one system with a single filesystem, a shared process space and transparent resource scheduling.
+> **Design note:** Nifsi is not a container orchestrator (like Kubernetes), a virtual machine manager, or a kernel replacement. Linux handles the physical hardware; Nifsi handles the network coordination and distributed state in userspace.
 
-*This isnt a container orchestrator (like Kubernetes), a hypervisor, or a replacement for the Linux kernel.*
+---
 
-It is a thin layer that handles the distribution so you don't have to. Nifsi handles the network, Linux handles the hardware and your applications do everything else.
+## Current Status & Reality Check
 
-## Project Status & Realistic Expectations
-**Full transparency**: I am a single developer building this alongside my full-time university coursework. Nifsi is a massive undertaking being built at a pace of roughly 15 hours a week (that is if I dont have exams or Im busy with other things in life). The estimated timeline to a stable v1 release is 12 to 16 months although it would take more as Im learning as Im doing the project along the way.
+I am an independent systems engineer building Nifsi alongside full-time university coursework. I spend roughly 15 hours a week on this project (outside exam cycles and academic deadlines), using it as a vehicle to test distributed systems theory, coding theory, and Linux kernel interfaces against real implementations.
 
-Because of this, I will try to keep the development steady but it will be subject to delays. There will be quiet periods when Im tired or there are exams when I have to take priority. I'm building this to solve a real problem and learn deep systems architecture. If anyone is following along, expect a marathon, not a sprint.
+- **Maturity**: Pre-alpha / active research prototype.
+- **Target environment**: Small, low-latency LAN clusters (home labs, edge nodes, drone swarms, research testbeds).
+- **Tested setups**: Tested across 4 virtual local nodes and heterogeneous nodes (e.g., laptop + Raspberry Pi 3B+ ARM Cortex-A53 over Wi-Fi).
 
-**Use Of AI**: certain files will be created with AI such as the web interface, such files will be mentioned as comments in the file itself. I have made some benchmarks with AI as well, since I believe it's an overall a better way to test the project thoroughly.
+---
 
-## What works today (v0.1)
+## System in Action
 
-| Feature | Status |
-|---|---|
-| Distributed FUSE filesystem mounted on every node | Works |
-| Raft leader election and replicated metadata (SQLite-backed log) | Works |
-| Encrypted node-to-node mesh (ChaCha20-Poly1305 AEAD framing) | Works |
-| Peer discovery and health gossip (Boids-style swarm) | Works |
-| HADR storage engine: slices, parity cohorts, self-repair | Implemented, repair tested on healthy data only |
-| CLI: `status`, `inspect`, `slice-query`, `repair`, `join`, `leave`, `evict` | Present; `status`, `inspect`, `slice-query`, `repair` verified |
-| Small web dashboard | Present (in the daemon crate) |
-| Test suite | 44 tests across `fs`, `mesh` and `raft` |
+The Nifsi CLI (`nifsi`) provides direct visibility into cluster consensus, storage strand health, slice allocation, and localized repair.
 
-I did manage to verify it on a local 3 node cluster: leader election settles, a file written on one node is readable from the other. 
-
-## What is not built yet
-
-- Shared process space and remote process execution
-- Resource scheduler and "compute follows data"
-- eBPF tracing
-- A `cat /nifsi/cluster/health` style virtual health file (use `nifsi status` for now)
-- Corruption and mid-write crash testing, and dead-peer detection that reflects in `status` quickly
-
-## Security
-
-Mesh traffic between nodes is encrypted and authenticated with ChaCha20-Poly1305. Nifsi has not had an independent security review and is a pre release software, so please dont expose it to untrusted networks. If you do find a security problem, please open an issue or contact me directly.
-
-## Quickstart (3 nodes on one machine)
-
-Requires Linux, FUSE ('fusermount'), and Rust 1.85 or newer as most crates use edition 2024.
+### 1. Cluster Status & Mesh Consensus
+The cluster elects temporary leaders via Raft when state replication is required. The live status displays node roles, term progression, mount points, peer round-trip latencies, and storage engine health:
 
 ```bash
-git clone https://github.com/phi5ic/Nifsi
+nifsi status
+```
+
+![Nifsi Cluster Status](docs/images/nifsi-cluster-status.jpg)
+
+### 2. File Strand & Integrity Inspection
+Files stored in Nifsi are managed as strands subdivided into 4 KB slices. The `inspect` command reports file metadata, slice counts, parity cohort assignments, and bit-level health:
+
+```bash
+nifsi inspect doc3.dat
+```
+
+![Nifsi File Strand Inspection](docs/images/nifsi-inspect-strand.jpg)
+
+### 3. Sub-Packet Slice Topology
+Files are tracked at granular slice boundaries. Querying slices displays internal slice identifiers, payload sizes, and linkage arms:
+
+```bash
+nifsi slice-query doc3.dat
+```
+
+![Nifsi Sub-Packet Slices](docs/images/nifsi-slice-query.jpg)
+
+### 4. Surgical Slice-Level Repair
+Unlike monolithic erasure codes that pull entire multi-megabyte chunks across the network to fix localized errors, Nifsi's **HADR (Horizontal & Diagonal Parity)** storage engine repairs damaged 4 KB slices independently without reading surviving data nodes:
+
+```bash
+nifsi repair-slice --chunk-idx 0 --slice-idx 0 doc3.dat
+```
+
+![Nifsi Slice Repair Execution](docs/images/nifsi-repair-slice.jpg)
+
+---
+
+## Core Architecture
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Applications                         │
+└───────────────────────────┬────────────────────────────┘
+                            │ POSIX I/O
+┌───────────────────────────▼────────────────────────────┐
+│              FUSE Mount Layer (/nifsi/)                │
+├────────────────────────────┬───────────────────────────┤
+│    HADR Storage Engine     │   Metadata Consensus      │
+│  - 4 KB Slice Granularity  │   - Raft Leader Election  │
+│  - Horizontal + Diag XOR   │   - SQLite-backed Log     │
+│  - Delta Journaling        │   - Quorum Writes         │
+├────────────────────────────┴───────────────────────────┤
+│            P2P Mesh Network (ChaCha20-Poly1305)        │
+│              - Boids-style Swarm Discovery             │
+│              - Zero-Trust Authenticated Frames         │
+└────────────────────────────────────────────────────────┘
+```
+
+### 1. HADR Storage Engine
+Standard XOR-based array codes (RAID-6, EVENODD, RDP) typically rebuild whole chunks when corruption occurs, causing heavy network traffic. Nifsi's prototype storage engine introduces:
+- **Slice-Level Repair**: Fragments are partitioned into 4 KB slices. Horizontal and diagonal parity are calculated across slices, allowing surgical repairs of isolated bit-rot or lost packets by transferring only 16 KB over the wire instead of multi-megabyte blocks.
+- **Delta Journaling**: Overwrites compute $\Delta = D^{\text{old}} \oplus D^{\text{new}}$ and update parities directly, keeping write amplification flat at **3.0×** regardless of chunk size (compared to monolithic XOR scaling up to 16,384× on 16 MB chunks).
+
+For the full math, benchmarks, and throughput trade-offs, read the write-up: **[What I Learned Trying to Beat XOR](https://phi5ic.github.io/posts/what-i-learned-trying-to-beat-xor/)** or check [`benchmarks/`](benchmarks/).
+
+### 2. Raft Consensus & Metadata
+- Leaders are elected via Raft when consensus is strictly required (such as file creation, directory metadata changes, or membership alterations).
+- Read operations and slice transfers bypass the consensus leader and stream directly between mesh peers.
+- State machine entries are persisted into an embedded SQLite log store.
+
+### 3. Encrypted P2P Mesh
+- Nodes discover peers using lightweight gossip protocols.
+- Node-to-node framing is encrypted and authenticated by default using **ChaCha20-Poly1305 AEAD**. Untrusted traffic is rejected before reaching the FUSE or storage subsystems.
+
+---
+
+## Feature Matrix (v0.1)
+
+| Subsystem | Feature | Status |
+|---|---|---|
+| **Filesystem** | Distributed FUSE mount across nodes | Working |
+| **Consensus** | Raft election, SQLite-backed log replication | Working |
+| **Networking** | ChaCha20-Poly1305 AEAD authenticated framing | Working |
+| **Discovery** | Swarm health gossip and peer discovery | Working |
+| **Storage (HADR)** | 4 KB slicing, horizontal/diagonal parity, slice repair | Working prototype |
+| **Storage (Delta)** | Delta journaling with constant 3.0× write amplification | Working prototype |
+| **CLI** | `status`, `inspect`, `slice-query`, `repair-slice`, `join`, `leave` | Working |
+| **Testing** | Virtual multi-node + Raspberry Pi 3B+ ARM cluster | Verified |
+| **Process Layer** | Remote process execution (`nifsi run`) | Planned |
+| **Scheduler** | Data-locality aware process scheduler | Planned |
+| **Tracing** | eBPF-based userspace kernel instrumentation | Planned |
+
+---
+
+## Quickstart
+
+### Prerequisites
+- Linux (kernel 5.15+ recommended)
+- `fuse3` / `fusermount3`
+- Rust 1.85+ (crates use the 2024 edition)
+
+### 1. Build from Source
+```bash
+git clone https://github.com/phi5ic/Nifsi.git
 cd Nifsi
 cargo build --workspace --release
 cargo test --workspace
 ```
 
-Start 3 daemons, each with its own id, port, data directory, control socket and mount poitn, and pointed at the other two. Run './target/release/nifsid --help' for the exact flags; the shape is:
+### 2. Run a Local 3-Node Cluster
+You can simulate a multi-node cluster on a single machine by starting three daemons on distinct ports and directories:
 
 ```bash
+# Terminal 1: Node 1
 ./target/release/nifsid --id node1 --bind 127.0.0.1:7331 \
   --data-dir /tmp/nifsi-cluster/node1/data \
   --socket /tmp/nifsi-cluster/node1.sock \
   --mount /tmp/nifsi-cluster/node1/mount \
   --peer node2=127.0.0.1:7332 --peer node3=127.0.0.1:7333
-# repeat for node2 (7332) and node3 (7333)
+
+# Terminal 2: Node 2
+./target/release/nifsid --id node2 --bind 127.0.0.1:7332 \
+  --data-dir /tmp/nifsi-cluster/node2/data \
+  --socket /tmp/nifsi-cluster/node2.sock \
+  --mount /tmp/nifsi-cluster/node2/mount \
+  --peer node1=127.0.0.1:7331 --peer node3=127.0.0.1:7333
+
+# Terminal 3: Node 3
+./target/release/nifsid --id node3 --bind 127.0.0.1:7333 \
+  --data-dir /tmp/nifsi-cluster/node3/data \
+  --socket /tmp/nifsi-cluster/node3.sock \
+  --mount /tmp/nifsi-cluster/node3/mount \
+  --peer node1=127.0.0.1:7331 --peer node2=127.0.0.1:7332
 ```
-Then:
- 
+
+### 3. Interacting with the Cluster
 ```bash
-# cluster state: roles, leader, peers, storage-engine counters
+# Check cluster state and peer connectivity
 ./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock status
- 
-# write on one node, read on another
-echo "hello" > /tmp/nifsi-cluster/node1/mount/hello.txt
-cat /tmp/nifsi-cluster/node3/mount/hello.txt
- 
-# look at how a file is stored
-./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock inspect hello.txt
-./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock slice-query hello.txt
- 
-# repair one slice
-./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock repair hello.txt --chunk-idx 0 --slice-idx 0
+
+# Write a file on Node 1, read it on Node 3
+echo "hello nifsi" > /tmp/nifsi-cluster/node1/mount/test.txt
+cat /tmp/nifsi-cluster/node3/mount/test.txt
+
+# Inspect file slices
+./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock inspect test.txt
+./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock slice-query test.txt
+
+# Trigger slice repair
+./target/release/nifsi --socket /tmp/nifsi-cluster/node1.sock repair-slice --chunk-idx 0 --slice-idx 0 test.txt
 ```
 
-## How It Works
+---
 
-> Everything is a file, everywhere.
+## Workspace Layout
 
-The project pulls heavy inspiration from Plan 9's philosophy as quoted above, but trying to fix the slow networks and lack of POSIX compatibility that held it back.
+The repository is structured as a Cargo workspace:
 
-- **The Filesystem is the Interface**: Nifsi mounts a distributed FUSE filesystem at `/nifsi/` on every node. There is no web dashboard or custom GUI. Much more simple that way. Health can be checked by running `cat /nifsi/cluster/health`. Standard Unix tools like `ls`, `grep`, and `watch` work normally just like any other Linux machines.
+```
+Nifsi/
+├── cli/          # 'nifsi' client binary (cluster control, inspection, repair)
+├── daemon/       # 'nifsid' background daemon (mount coordinator, local API)
+├── fs/           # FUSE driver & HADR slice-level erasure coding engine
+├── mesh/         # ChaCha20-Poly1305 encrypted wire framing & peer discovery
+├── raft/         # Raft state machine and SQLite log persistence
+├── core/         # Shared protocol types, config structures, and primitives
+└── benchmarks/   # Benchmark harness, JSON metrics, and scientific reports
+```
 
-- **Encrypted Mesh**: All nodes connect via a peer-to-peer ChaCha20-Poly1305 AEAD encrypted mesh. The network is fully encrypted by default with zero trust. No exceptions, not even on a local LAN.
-
-- **Compute Follows Data**: When you spawn a process, the scheduler figures out where the required data lives and runs the compute there.
-
-- **Flat Topology**: There is no permanent "master" node to act as a single point of failure. All nodes are equal, and temporary leaders are only elected via Raft when consensus is strictly necessary (like writing files or updating metadata).
-
-- **Bulletproof Writes**: A file is either fully written or not written at all. Partial states are never exposed to users.
-
-## Technology Stack
-
-- **Language**: written entirely in *Rust* for memory safety and C like performance.
-
-- **Filesystem**:*FUSE* allows me to build crash-safe userspace filesystems without writing custom kernel modules.
-
-- **Tracing**: using *eBPF* for safe, userspace kernel instrumentation.
-
-- **Networking**: zero-trust, authenticated AEAD peer-to-peer framing powered by *ChaCha20-Poly1305* and Boids swarm routing.
-
-# What Stage is The Project at Now ?
-
-Im trying to make the v1 possible, v1 is built for small, low latency LAN clusters of roughly 5 to 50 nodes. It is perfect for home labs, small offices and research environments or drones where you just want to share compute and data across a few machines without managing infrastructure stack.
-
-***UPDATE**; The core system is complete and works, you can test it out in a trusted network.
-
-***UPDATE**: The skeletal system is complete and compiles clean.
-
-**Workspace**: five crates wired together as a Cargo workspace:
-
-| Crate | Purpose |
-|---|---|
-| `core` | Shared wire protocol and config |
-| `mesh` | Encrypted mesh, swarm discovery, heartbeats |
-| `raft` | SQLite-backed Raft node and log store |
-| `fs` | FUSE filesystem and the HADR storage engine |
-| `daemon` | `nifsid`, the node daemon (includes the web dashboard) |
-| `cli` | `nifsi`, the command-line client |
+---
 
 ## Roadmap
- 
-1. Corruption and failure testing: bit-flip repair, mid-write crash, leader loss, node rejoin
-2. Reliable dead-peer detection and real RTT/disk metrics in `status`
-3. Remote process execution (`nifsi run`)
-4. Scheduler with data-aware placement
-5. eBPF-based tracing
 
-# License
-Nifsi is released under the **AGPL v3**. It is strictly open-source. You can use it for anything, but if you modify the code and allow users to interact with it over a network, you are legally required to publish your modified source code back to the community.
+1. **Failure Injection Harness**: Systematic tests for Byzantine faults, bit-flips mid-write, and ungraceful kill/recovery cycles across physical switches.
+2. **Hybrid Ingestion Pipeline**: Wire bulk full-stripe writes through vectorized monolithic XOR while indexing background chunks into 4 KB slices for repair.
+3. **Data-Aware Scheduler**: Schedule compute tasks directly on nodes holding the target data slices to avoid network traffic.
+4. **Remote Execution (`nifsi run`)**: Userspace process spawning integrated with the distributed filesystem.
+5. **eBPF Instrumentation**: Kernel-level tracing for I/O latency breakdowns and syscall metrics.
+
+---
+
+## Benchmarks & Code Artifacts
+
+The microbenchmarks, chaos testing scripts, and JSON results comparing Sliced HADR-v2 against Monolithic XOR and Cauchy Reed-Solomon are located in [`benchmarks/`](benchmarks/):
+- Harness: `benchmarks/run_benchmark.sh` and `benchmarks/hadr_bench.rs`
+- Scientific report: `benchmarks/BENCHMARK_SCIENTIFIC_REPORT.md`
+- Raw results: `benchmarks/benchmark_results.json`
+
+---
+
+## License
+
+Nifsi is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [`LICENSE`](LICENSE) for details.
